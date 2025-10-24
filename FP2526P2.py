@@ -1,4 +1,3 @@
-#Código de Irina Bateira Cojocari (IST1117890 : irina.b.cojocari@tecnico.ulisboa.pt)
 """constantes"""
 LETRAS = {'A':1, 'B':3, 'C':2, 'Ç':3, 'D':2, 'E':1, 'F':4, 'G':4, 'H':4, 'I':1, 'J':5, 'L':2, \
         'M': 1, 'N':3, 'O':1, 'P':2, 'Q':6, 'R':1, 'S':1, 'T':1, 'U':1, 'V':4, 'X':8, 'Z':8}
@@ -15,20 +14,14 @@ NIVEIS= {'FACIL', 'MEDIO', 'DIFICIL'}
 
 
 def c_cedilha(letra): 
-    """
-    Chave para garantir que, na ordem alfabética,
-    o Ç fica entre o C e o D e não no final.
-    """
+    """Chave para garantir que, na ordem alfabética,
+    o Ç fica entre o C e o D e não no final."""
     if letra == 'Ç':
         return ord('C') + 0.5  
     return ord(letra)
 
 def expande_conjunto(conjunto):
-    """
-    Expande um conjunto.
-    Arg -> dict = {letra : ocorrencia}
-    return -> [letra, letra,...]
-    """
+    """Arg -> dict = {letra : ocorrencia}    Return -> [letra, letra,...]"""
     expandido = []
     for key in conjunto:
         adicionada = 0
@@ -38,17 +31,19 @@ def expande_conjunto(conjunto):
     return expandido
 
 def obtem_direcao(casa1, casa2):
-    if obtem_linha(casa1) == obtem_linha(casa2):
+    """Arg -> casa, casa        Returns -> str"""
+    if obtem_lin(casa1) == obtem_lin(casa2):
         return 'H'
-    elif obtem_coluna(casa1) == obtem_coluna(casa2):  
+    elif obtem_col(casa1) == obtem_col(casa2):  
         return 'V'
+    else:
+        return 'I' #de inválido
     
 #----------------------------------------------------------------------------
 """ TAD casa """
 #construtor
 def cria_casa(linha, coluna):
-    """Arg -> int, int   Returns -> (int, int)
-    """
+    """Arg -> int, int   Returns -> casa"""
     if type(linha) != int or type(coluna) != int or \
        not(0 < linha <= ALTURA) or not (0 < coluna <= LARGURA):
         raise ValueError('cria_casa: argumentos inválidos')
@@ -56,19 +51,19 @@ def cria_casa(linha, coluna):
         return (linha, coluna)
 
 #seletores
-def obtem_linha(casa):
+def obtem_lin(casa):
     """Arg -> Casa   Returns -> int"""
     return casa[0]
 
-def obtem_coluna(casa):
+def obtem_col(casa):
     """Arg -> Casa  Returns -> int"""
     return casa[1]
 
 #reconhecedor
 def eh_casa(c):
     """Arg -> Casa  Returns -> bool"""
-    if type(c)!= tuple or type(obtem_linha(c)) != int or type(obtem_coluna(c)) != int or \
-       not(0 < obtem_linha(c) <= ALTURA) or not (0 < obtem_coluna(c) <= LARGURA):
+    if type(c)!= tuple or type(obtem_lin(c)) != int or type(obtem_col(c)) != int or \
+       not(0 < obtem_lin(c) <= ALTURA) or not (0 < obtem_col(c) <= LARGURA):
         return False
     else:
         return True
@@ -76,15 +71,16 @@ def eh_casa(c):
 #teste
 def casas_iguais(casa1, casa2):
     """Arg -> casa, casa     Returns -> bool"""
-    if obtem_linha(casa1) == obtem_linha(casa2) and obtem_coluna(casa1)==obtem_coluna(casa2) and eh_casa(casa1) and eh_casa(casa2):
+    if eh_casa(casa1) and eh_casa(casa2) and obtem_lin(casa1) == obtem_lin(casa2) and obtem_col(casa1)==obtem_col(casa2):
         return True
     else: 
         return False
 
 #transformadores
 def casa_para_str(casa):
-    """Arg _> casa      Returns -> str"""
-    return f'({obtem_linha(casa)},{obtem_coluna(casa)})'
+    """Arg -> casa      Returns -> str"""
+    if eh_casa(casa):
+        return f'({obtem_lin(casa)},{obtem_col(casa)})'
 
 def str_para_casa(string):
     "Arg -> str     Returns -> casa"
@@ -95,10 +91,10 @@ def str_para_casa(string):
 #funcoes de alto nivel
 def incrementa_casa(casa, direcao, distancia):
     """Arg -> casa, direcao, distancia      Returns -> casa (atualizada)"""
-    if direcao == 'H' and 0 < (obtem_coluna(casa) + distancia) <= LARGURA:
-        return (obtem_linha(casa), obtem_coluna(casa)  + distancia)
-    elif direcao == 'V' and 0 < (obtem_linha(casa) + distancia) <= ALTURA:
-        return (obtem_linha(casa)  + distancia), obtem_coluna(casa)
+    if direcao == 'H' and 0 < (obtem_col(casa) + distancia) <= LARGURA:
+        return (obtem_lin(casa), obtem_col(casa)  + distancia)
+    elif direcao == 'V' and 0 < (obtem_lin(casa) + distancia) <= ALTURA:
+        return (obtem_lin(casa)  + distancia, obtem_col(casa))
     else:
         return casa
 
@@ -108,101 +104,91 @@ def incrementa_casa(casa, direcao, distancia):
 #construtores
 def cria_humano(nome):
     """Arg -> str
-    Returns -> dict = {id: id, pontos: pontos, letras: letras}"""
+    Returns -> dict = {id: id, pontos: pontos, letras: letras, agente: bool}"""
     if type(nome) != str or len(nome) == 0 or '@' in nome:
         raise ValueError('cria_humano: argumento inválido')
     else:
-        return {'id': nome, 'pontos': 0, 'letras': [], 'agente':False}
+        return {'id': nome, 'pontos': 0, 'letras': '', 'agente':False}
     
 def cria_agente(nivel):
     """Arg -> str
-    Returns -> dict = {id: id, pontos: pontos, letras: letras}"""
+    Returns -> dict = {id: id, pontos: pontos, letras: letras, agente: bool}"""
     if type(nivel) != str or nivel not in NIVEIS:
         raise ValueError('cria_agente: argumento inválido')
     else:
-        return {'id': f'{nivel}', 'pontos': 0, 'letras': [], 'agente': True}
+        return {'id': f'{nivel}', 'pontos': 0, 'letras': '', 'agente': True}
 
 #seletores
 def jogador_identidade(jogador):
-    """Arg -> jogador
-    Returns -> str"""
+    """Arg -> jogador    Returns -> str"""
     return jogador['id']
 
 def jogador_pontos(jogador):
-    """Arg -> jogador
-    Returns -> int"""
+    """Arg -> jogador    Returns -> int"""
     return jogador['pontos']
 
 def jogador_letras(jogador):
-    """Arg -> jogador
-    Returns -> sorted list"""
-    return sorted(jogador['letras'], key = c_cedilha)
+    """Arg -> jogador    Returns -> sorted list"""
+    return ''.join(sorted(jogador['letras'], key = c_cedilha))
 
 #modificadores
 def recebe_letra(jogador, letra):
-    """Arg -> jogador, str
-    Returns -> jogador"""
-    jogador['letras'].append(letra)
+    """Arg -> jogador, str    Returns -> jogador"""
+    jogador['letras'] = jogador['letras'] + letra
     return jogador
 
 def usa_letra(jogador, letra):
-    """Arg -> jogador, str
-    Returns -> jogador"""
-    jogador['letras'].remove(letra)
+    """Arg -> jogador, str    Returns -> jogador"""
+    jogador['letras'] = jogador['letras'].replace(letra, '', 1)
     return jogador
 
 def soma_pontos(jogador, pontos):
-    """Arg -> jogador, int
-    Returns -> jogador"""
+    """Arg -> jogador, int    Returns -> jogador"""
     jogador['pontos'] = jogador['pontos'] + pontos
     return jogador
 
 #reconhecedor
+
+def eh_jogador(arg):
+    """Arg -> universal     Returns -> bool"""
+    return (type(arg) == dict and set(arg.keys()) == {'id', 'pontos', 'letras', 'agente'})
+
 def eh_humano(jogador):
-    """Arg -> jogador
-    Returns -> bool"""
-    if type(jogador) == dict and set(jogador.keys()) == {'id', 'pontos', 'letras', 'agente'}:
-        return not jogador['agente']
+    """Arg -> jogador    Returns -> bool"""
+    return eh_jogador(jogador) and not jogador['agente']
     
 def eh_agente(jogador):
-    """Arg -> jogador
-    Returns -> bool"""
-    if type(jogador) == dict and set(jogador.keys()) == {'id', 'pontos', 'letras', 'agente'}:
-        return jogador['agente']
+    """Arg -> jogador    Returns -> bool"""
+    return eh_jogador(jogador) and jogador['agente']
+
 #teste
 def jogadores_iguais(jog1, jog2):
-    """Arg -> jogador, jogador
-    Returns -> bool"""
-    if jogador_identidade(jog1) == jogador_identidade(jog2) and jogador_pontos(jog1) == jogador_pontos(jog2) and\
-         jogador_letras(jog1) == jogador_letras(jog2):
-        if (eh_humano(jog1) and eh_humano(jog2)) or (eh_agente(jog1) and eh_agente(jog2)):
-            return True
-    else:
-        return False
+    """Arg -> jogador, jogador   Returns -> bool"""
+    return ((eh_humano(jog1) and eh_humano(jog2)) or (eh_agente(jog1) and eh_agente(jog2)))\
+        and jogador_identidade(jog1) == jogador_identidade(jog2) and jogador_pontos(jog1) == jogador_pontos(jog2) and jogador_letras(jog1) == jogador_letras(jog2) 
 
 #transformador
 
 def jogador_para_str(jogador):
-    """Arg -> jogador
-    Returns -> str"""
-    letras = ''
-    for letra in jogador_letras(jogador):
-        letras += f' {letra}'
-    if eh_agente(jogador):
-        return  (f'BOT({jogador_identidade(jogador)}) ({str(jogador_pontos(jogador)):>3}):{letras}')
+    """Arg -> jogador    Returns -> str"""
+    letras_display = jogador_letras(jogador)
+    if letras_display:
+        letras_str = ' ' + ' '.join(letras_display)
     else:
-        return (f'{jogador_identidade(jogador)} ({str(jogador_pontos(jogador)):>3}):{letras}') 
+        letras_str = ''
+    if eh_agente(jogador):
+        return (f'BOT({jogador_identidade(jogador)}) ({str(jogador_pontos(jogador)):>3}):{letras_str}')
+    if eh_humano(jogador):
+        return (f'{jogador_identidade(jogador)} ({str(jogador_pontos(jogador)):>3}):{letras_str}') 
 
 
 #funcoes de alto nivel
-def distribui_letras(jogador, letras, num):
-    """Arg -> jogador str int
-    Returns -> jogador"""
-    """Dá a última letra de uma lista a um jogador. Devolve True se o fizer ou False se não o fizer."""
+def distribui_letras(jogador, letras, num): 
+    """Arg -> jogador, str, int    Returns -> jogador"""
     for i in range(num):
         if len(letras) > 0:
-            recebe_letra(jogador, letras[-1])
-            letras.pop()
+            recebe_letra(jogador, letras.pop())
+
     return jogador
 
 
@@ -221,24 +207,23 @@ def cria_vocabulario(v):
         raise ValueError('cria_vocabulario: argumento inválido')
     vocabulario = {}
     for palavra in v:
+        if type(palavra) != str or not all(letra in LETRAS.keys() for letra in palavra):
+            raise ValueError('cria_vocabulario: argumento inválido')
         if len(palavra) < 2 or len(palavra) > 15:
             continue
-        else:
-            for letra in palavra:
-                if letra not in LETRAS.keys():
-                    raise ValueError('cria_vocabulario: argumento inválido')
     
         comprimento, inicial, pontos = len(palavra), palavra[0], 0
         if comprimento not in vocabulario:
             vocabulario[comprimento]={}
         if inicial not in vocabulario[comprimento]:
             vocabulario[comprimento][inicial]=[]
+        
         for i in range(comprimento):
             pontos += LETRAS[palavra[i]]
         vocabulario[comprimento][inicial] += [(palavra, pontos)]
+    
     for comprimento in vocabulario:
         for letra in vocabulario[comprimento]:
-            
             for i in range(comprimento-1,-1,-1):
                 vocabulario[comprimento][letra].sort(key = lambda x: c_cedilha(x[0][i]))
             vocabulario[comprimento][letra].sort(key = lambda x: -x[1])
@@ -252,9 +237,12 @@ def obtem_pontos(vocabulario, palavra):
     for word in lista:
         if word[0] == palavra:
             return word[1]
+    return 0
 
 def obtem_palavras(vocabulario, comprimento, letra):
     """Arg -> Vocabulario, int, letra       Returns -> ((palavra, pontos), (palavra, pontos),...)"""
+    if comprimento not in vocabulario or letra not in vocabulario[comprimento]:
+        return ()
     palavras=()
     for palavra in vocabulario[comprimento][letra]:
         palavras = palavras + (palavra, )
@@ -267,27 +255,19 @@ def testa_palavra_padrao(vocabulario, palavra, padrao, letras):
     Arg -> vocabulario, palavra(str), padrao(str), letras(str)
     Returns -> bool
     """
-    if isinstance(letras, str):
-        letras_disponiveis = list(letras)
-    else:
-        letras_disponiveis = letras.copy()
+    letras_disponiveis = letras
     possibilidade = ''
-    if palavra[0] not in vocabulario[len(palavra)]:
+    if len(palavra) not in vocabulario or palavra[0] not in vocabulario[len(palavra)]:
         return False
-    palavra_existe = False
-    for palavra_tuple in vocabulario[len(palavra)][palavra[0]]:
-        if palavra_tuple[0] == palavra: 
-            palavra_existe = True
-            break
-    if not palavra_existe:
-        return False
+   
     if len(padrao) != len(palavra):
         return False
     if '.' not in padrao: 
         return False
+    letras_disponiveis = letras
     for i in range(len(padrao)):
         if padrao[i] == '.' and palavra[i] in letras_disponiveis: 
-           letras_disponiveis.remove(palavra[i])
+           letras_disponiveis= letras_disponiveis.replace(palavra[i], '', 1)
            possibilidade += palavra[i]
         elif padrao[i] != '.' and padrao[i] == palavra[i]:
             possibilidade += palavra[i]
@@ -303,21 +283,18 @@ def ficheiro_para_vocabulario(nome_fich):
     Returns -> vocabulario
     """
     with open(nome_fich, 'r', encoding = 'utf-8') as f:
-        palavras = f.readlines()
-        filtrado = ()
-        for palavra in palavras:
-            filtrado += (((palavra.strip()).upper()), )
-    return cria_vocabulario(filtrado)
+        return cria_vocabulario(tuple([(palavra.strip()).upper() for palavra in f.readlines()]))
 
 
 def vocabulario_para_str(vocabulario):
     """Arg -> vocabulario      Returns -> str"""
+    if type(vocabulario) == tuple:
+        vocabulario = cria_vocabulario(vocabulario)
     vocabulario_str=[]
     for length in sorted(vocabulario):
         for letra in sorted(vocabulario[length], key = c_cedilha):
-            for palavra in vocabulario[length][letra]:
-                vocabulario_str+=[palavra[0]]
-    return'\n'.join(vocabulario_str) 
+            vocabulario_str += [word[0] for word in obtem_palavras(vocabulario, length, letra)]
+    return'\n'.join(vocabulario_str)
     
 #funcoes alto nivel
 def procura_palavra_padrao(vocabulario, padrao, letras, min_pontos):
@@ -331,19 +308,16 @@ def procura_palavra_padrao(vocabulario, padrao, letras, min_pontos):
     """
     
     opcoes=[]
-    if padrao[0] != '.':
-        if len(padrao) in vocabulario and padrao[0] in vocabulario[len(padrao)]:
-            for palavra in vocabulario[len(padrao)][padrao[0]]:
-                if testa_palavra_padrao(vocabulario, palavra[0], padrao, letras):
-                    if obtem_pontos(vocabulario, palavra[0]) >= min_pontos:
-                        opcoes.append(palavra)
-    else:
+    if padrao[0] != '.' and len(padrao) in vocabulario and padrao[0] in vocabulario[len(padrao)]:
+        for palavra in vocabulario[len(padrao)][padrao[0]]:
+            if testa_palavra_padrao(vocabulario, palavra[0], padrao, letras) and obtem_pontos(vocabulario, palavra[0]) >= min_pontos:
+                opcoes.append(palavra)
+    elif padrao[0] == '.':
         for letra in letras:
             if len(padrao) in vocabulario and letra in vocabulario[len(padrao)]:
                 for palavra in vocabulario[len(padrao)][letra]:
-                    if testa_palavra_padrao(vocabulario, palavra[0], padrao, letras):
-                        if obtem_pontos(vocabulario, palavra[0]) >= min_pontos:
-                            opcoes.append(palavra)
+                    if testa_palavra_padrao(vocabulario, palavra[0], padrao, letras) and obtem_pontos(vocabulario, palavra[0]) >= min_pontos:
+                        opcoes.append(palavra)
     if len(opcoes) == 0:
         return ('',0)
     for i in range(len(padrao)-1,-1,-1):
@@ -367,13 +341,13 @@ def cria_tabuleiro():
 #seletores
 def obtem_letra(tabuleiro, casa):
     """Arg -> tabuleiro, casa       Returns -> str"""
-    letra = tabuleiro[obtem_linha(casa) - 1][obtem_coluna(casa)- 1] #O número das casas vai de 1 a 15, mas os indexes do tabuleiro vão de 0 a 14
+    letra = tabuleiro[obtem_lin(casa) - 1][obtem_col(casa)- 1] #O número das casas vai de 1 a 15, mas os indexes do tabuleiro vão de 0 a 14
     return letra
 
 #modificadores
 def insere_letra(tabuleiro, casa, letra):
     """Arg -> tabuleiro, casa, str      Returns -> tabuleiro (atualizado)"""
-    tabuleiro[obtem_linha(casa) - 1][obtem_coluna(casa) - 1] = letra
+    tabuleiro[obtem_lin(casa) - 1][obtem_col(casa) - 1] = letra
     return tabuleiro
 
 #reconhecedor
@@ -392,8 +366,6 @@ def eh_tabuleiro_vazio(arg):
     """Arg -> tabuleiro     Returns -> bool"""
     if eh_tabuleiro(arg):
         for i in range(len(arg)):
-            if type(arg[i]) != list:
-                return False
             for j in range(len(arg[i])):
                 if obtem_letra(arg, cria_casa(i+1, j+1)) != '.':
                     return False
@@ -437,14 +409,14 @@ def obtem_padrao(tabuleiro, inicio, fim):
     padrao=''
     direcao = obtem_direcao(inicio, fim)
     if direcao == 'V':
-        while obtem_linha(inicio) <= obtem_linha(fim):        
+        while obtem_lin(inicio) <= obtem_lin(fim):        
             padrao += obtem_letra(tabuleiro, inicio)
             novo_inicio = incrementa_casa(inicio, direcao, 1)
             if novo_inicio == inicio:
                 break
             inicio = novo_inicio
     elif direcao == 'H':
-        while obtem_coluna(inicio) <= obtem_coluna(fim):
+        while obtem_col(inicio) <= obtem_col(fim):
             padrao += obtem_letra(tabuleiro, inicio)
             novo_inicio = incrementa_casa(inicio, direcao, 1)
             if novo_inicio == inicio:
@@ -509,13 +481,9 @@ def baralha_saco(seed):
         for i in range(len(letras)-1, 0, -1): 
             letras[(j) % (i + 1)], letras[i] = letras[i], letras[(j) % (i + 1)]
             j = gera_numero_aleatorio(j)
-
-    def baralha_conjunto(conjunto, estado): 
-        """Recebe um dicionário, transforma-o na lista correspondente e baralha essa lista."""
-        conjunto = sorted(expande_conjunto(conjunto), key = c_cedilha)
-        permuta_letras(conjunto,estado)
-        return conjunto
-    return baralha_conjunto(SACO, seed)
+    letras = sorted(expande_conjunto(SACO), key = c_cedilha)
+    permuta_letras(letras, seed) 
+    return letras
 
 
 def jogada_humano(tabuleiro, jogador, vocabulario, pilha):
@@ -523,7 +491,6 @@ def jogada_humano(tabuleiro, jogador, vocabulario, pilha):
     inputvalido = False
     while not inputvalido:
         acao = input(f'Jogada {jogador_identidade(jogador)}: ').split()
-
         if len(acao) == 0: #Se estiver em branco/for só espaços
             continue
 
@@ -532,8 +499,9 @@ def jogada_humano(tabuleiro, jogador, vocabulario, pilha):
             if len(letras) < 1: #Se não tiver fornecido nenhuma letra
                 continue
             char_invalido = False
+            letras_jogador = jogador_letras(jogador)
             for letra in letras:
-                if letra not in LETRAS  or letras.count(letra) > jogador_letras(jogador).count(letra):
+                if letra not in LETRAS  or letras.count(letra) > letras_jogador.count(letra):
                     char_invalido = True
                     break
             if char_invalido:
@@ -550,9 +518,10 @@ def jogada_humano(tabuleiro, jogador, vocabulario, pilha):
                 continue
             inicio, direcao, palavra = cria_casa(int(acao[0]), int(acao[1])), acao[2], acao[3]
             if direcao == 'H':
-                fim = cria_casa(obtem_linha(inicio), obtem_coluna(inicio) + len(palavra)-1)
-            if direcao == 'V':
-                fim = cria_casa(obtem_linha(inicio) + len(palavra) -1, obtem_coluna(inicio))
+                fim = cria_casa(obtem_lin(inicio), obtem_col(inicio) + len(palavra)-1)
+            elif direcao == 'V':
+                fim = cria_casa(obtem_lin(inicio) + len(palavra) -1, obtem_col(inicio))
+            
             padrao = obtem_padrao(tabuleiro, inicio, fim)
             
             if eh_tabuleiro_vazio(tabuleiro) and testa_palavra_padrao(vocabulario, palavra, padrao, jogador_letras(jogador)):
@@ -562,20 +531,21 @@ def jogada_humano(tabuleiro, jogador, vocabulario, pilha):
                 else:
                     soma_pontos(jogador, obtem_pontos(vocabulario, palavra))
                     adicionar = 0
-                    for letra in palavra:
-                        if letra not in padrao:
-                            usa_letra(jogador, letra)
+                    for i in range(len(palavra)):
+                        if padrao[i] == '.':
+                            usa_letra(jogador, palavra[i])
                             adicionar += 1
                     distribui_letras(jogador, pilha, adicionar)
                     return True
+                   
             
-            elif not eh_tabuleiro_vazio(tabuleiro) and padrao.count('.') != len(padrao) and\
+            elif (not eh_tabuleiro_vazio(tabuleiro)) and padrao.count('.') != len(padrao) and\
             testa_palavra_padrao(vocabulario, palavra, padrao, jogador_letras(jogador)):
                 insere_palavra(tabuleiro, inicio, direcao, palavra)
                 soma_pontos(jogador, obtem_pontos(vocabulario, palavra))
                 adicionar = 0
                 for i in range(len(palavra)):
-                    if palavra[i] != padrao[i]:
+                    if padrao[i] == '.':
                         usa_letra(jogador, palavra[i])
                         adicionar += 1
                 distribui_letras(jogador, pilha, adicionar)
@@ -605,13 +575,14 @@ def jogada_agente(tabuleiro, jogador, vocabulario, pilha):
     possibilidades = []
      
     for i in range(len(padroes)):
-        padrao = padroes[i]
-        inicio = inicios[i] 
-        direcao = direcoes[i]
-        if len(padrao) in vocabulario:
-            resultado = procura_palavra_padrao(vocabulario, padrao, jogador_letras(jogador), 0)
-            if resultado[0] != '':  
-                possibilidades.append((resultado, inicio, direcao))
+        if any(c != '.' for c in padroes[i]) and any(c == '.' for c in padroes[i]):
+            padrao = padroes[i]
+            inicio = inicios[i] 
+            direcao = direcoes[i]
+            if len(padrao) in vocabulario:
+                resultado = procura_palavra_padrao(vocabulario, padrao, jogador_letras(jogador), 0)
+                if resultado[0] != '':  
+                    possibilidades.append((resultado, inicio, direcao))
     possibilidades.sort(key = lambda x : x[0][1], reverse = True)
     if possibilidades != []:
         melhor = possibilidades[0] 
@@ -619,18 +590,18 @@ def jogada_agente(tabuleiro, jogador, vocabulario, pilha):
         inicio = melhor[1]  
         direcao = melhor[2]
         if direcao == 'H':
-            padrao = obtem_padrao(tabuleiro, inicio, cria_casa(obtem_linha(inicio), obtem_coluna(inicio) + len(palavra)-1))
+            padrao = obtem_padrao(tabuleiro, inicio, cria_casa(obtem_lin(inicio), obtem_col(inicio) + len(palavra)-1))
         if direcao == 'V':
-            padrao = obtem_padrao(tabuleiro, inicio, cria_casa(obtem_linha(inicio) + len(palavra) -1, obtem_coluna(inicio)))
+            padrao = obtem_padrao(tabuleiro, inicio, cria_casa(obtem_lin(inicio) + len(palavra) -1, obtem_col(inicio)))
         insere_palavra(tabuleiro,  inicio, direcao, palavra)
         tirar = 0
         for i in range(len(palavra)):
-            if palavra[i] != padrao[i]:
+            if padrao[i] == '.':
                 usa_letra(jogador, palavra[i])
                 tirar += 1
         distribui_letras(jogador, pilha, tirar)
         soma_pontos(jogador, pontos)
-        print(f"Jogada {jogador_identidade(jogador)}: J {obtem_linha(inicio)} {obtem_coluna(inicio)} {direcao} {palavra}")
+        print(f"Jogada {jogador_identidade(jogador)}: J {obtem_lin(inicio)} {obtem_col(inicio)} {direcao} {palavra}")
         return True
 
     elif possibilidades == [] and len(pilha) >= 7:
@@ -695,3 +666,4 @@ def scrabble2(jogadores, nome_fich, seed):
          
     scores = tuple(jogador_pontos(player) for player in players)
     return scores
+
