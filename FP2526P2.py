@@ -53,11 +53,13 @@ def cria_casa(linha, coluna):
 #seletores
 def obtem_lin(casa):
     """Arg -> Casa   Returns -> int"""
-    return casa[0]
+    if eh_casa(casa):
+        return casa[0]
 
 def obtem_col(casa):
     """Arg -> Casa  Returns -> int"""
-    return casa[1]
+    if eh_casa(casa):
+        return casa[1]
 
 #reconhecedor
 def eh_casa(c):
@@ -226,7 +228,8 @@ def cria_vocabulario(v):   #tirar comment
 #seletores
 def obtem_pontos(vocabulario, palavra):
     """Arg -> vocabulario, str      Returns -> int"""
-    return vocabulario[len(palavra)][palavra[0]][palavra]
+    if len(palavra) in vocabulario and palavra[0] in vocabulario[len(palavra)] and palavra in vocabulario[len(palavra)][palavra[0]]:
+        return vocabulario[len(palavra)][palavra[0]][palavra]
 
 def obtem_palavras(vocabulario, comprimento, letra):
     """Arg -> Vocabulario, int, letra       Returns -> ((palavra, pontos), (palavra, pontos),...)"""
@@ -443,7 +446,7 @@ def obtem_subpadroes(tabuleiro, inicio, fim, length):
     
     for i in range (len(padrao)-1):
         for j in range(len(padrao), i, -1):
-            if (not all(c == '.' for c in padrao[i : j]) and not all(c != '.' for c in padrao[i : j])) and (padrao[i : j].count('.') <= length)\
+            if (not all(c == '.' for c in padrao[i : j])) and (not all(c != '.' for c in padrao[i : j])) and (padrao[i : j].count('.') <= length)\
             and not (i > 0 and padrao[i-1] != '.') and not (j < len(padrao) and padrao[j] != '.'):
                 subpadroes += (padrao[i : j], )
                 inicios += ((incrementa_casa(inicio, obtem_direcao(inicio, fim), i)), )
@@ -617,8 +620,6 @@ def jogada_agente(tabuleiro, jogador, vocabulario, pilha):
         print(f'Jogada {jogador_identidade(jogador)}: P')
         return False
 
-
-
 def scrabble2(jogadores, nome_fich, seed):
     """Arg -> tuplo com 2-4 jogadores, estando os agentes indicados com @, str, int
     Returns -> tuplo (scores)
@@ -635,9 +636,9 @@ def scrabble2(jogadores, nome_fich, seed):
     for jogador in jogadores:
         if type(jogador) != str:
             raise ValueError('scrabble2: argumentos inválidos')
-        if jogador[0] == '@':
+        if jogador[0] == '@' and jogador[1:] in NIVEIS:
             players.append(cria_agente(jogador[1:]))
-        else:
+        elif type(jogador) == str:
             players.append(cria_humano(jogador))
     for player in players:
         distribui_letras(player, pilha,  MAX_LETRAS_INIT)
