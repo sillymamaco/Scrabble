@@ -62,8 +62,8 @@ def obtem_col(casa):
 #reconhecedor
 def eh_casa(c):
     """Arg -> Casa  Returns -> bool"""
-    if type(c)!= tuple or type(obtem_lin(c)) != int or type(obtem_col(c)) != int or \
-       not(0 < obtem_lin(c) <= ALTURA) or not (0 < obtem_col(c) <= LARGURA):
+    if type(c)!= tuple or len(c) !=2 or type(c[0]) != int or type(c[1]) != int or \
+       not(0 < c[0] <= ALTURA) or not (0 < c[1] <= LARGURA):
         return False
     else:
         return True
@@ -196,7 +196,7 @@ def distribui_letras(jogador, letras, num):
 """TAD vocabulario"""
 
 #construtor
-def cria_vocabulario(v):
+def cria_vocabulario(v):   #tirar comment
     """
     Organiza as palavras de um tuplo num dicionário do tipo:
     vocabulario = {comprimento: {inicial: (palavra, pontos), inicial: (palavra, pontos)}, comrpimento...}
@@ -210,43 +210,40 @@ def cria_vocabulario(v):
         if type(palavra) != str or not all(letra in LETRAS.keys() for letra in palavra):
             raise ValueError('cria_vocabulario: argumento inválido')
         if len(palavra) < 2 or len(palavra) > 15:
-            continue
+            raise ValueError('cria_vocabulario: argumento inválido')
     
         comprimento, inicial, pontos = len(palavra), palavra[0], 0
         if comprimento not in vocabulario:
             vocabulario[comprimento]={}
         if inicial not in vocabulario[comprimento]:
-            vocabulario[comprimento][inicial]=[]
+            vocabulario[comprimento][inicial]={}
         
         for i in range(comprimento):
             pontos += LETRAS[palavra[i]]
-        vocabulario[comprimento][inicial] += [(palavra, pontos)]
-    
-    for comprimento in vocabulario:
-        for letra in vocabulario[comprimento]:
-            for i in range(comprimento-1,-1,-1):
-                vocabulario[comprimento][letra].sort(key = lambda x: c_cedilha(x[0][i]))
-            vocabulario[comprimento][letra].sort(key = lambda x: -x[1])
-            
+        vocabulario[comprimento][inicial][palavra] = pontos            
     return vocabulario
 
 #seletores
 def obtem_pontos(vocabulario, palavra):
     """Arg -> vocabulario, str      Returns -> int"""
-    lista = vocabulario[len(palavra)][(palavra[0])]
-    for word in lista:
-        if word[0] == palavra:
-            return word[1]
-    return 0
+    return vocabulario[len(palavra)][palavra[0]][palavra]
 
 def obtem_palavras(vocabulario, comprimento, letra):
     """Arg -> Vocabulario, int, letra       Returns -> ((palavra, pontos), (palavra, pontos),...)"""
     if comprimento not in vocabulario or letra not in vocabulario[comprimento]:
         return ()
-    palavras=()
+    palavras= [palavra for palavra in vocabulario[comprimento][letra].keys()]
+    """for i in range(comprimento-1,-1,-1):
+        palavras.sort(key = lambda x: c_cedilha(x[i]))
+    """ 
+    palavra_pontos = []
     for palavra in vocabulario[comprimento][letra]:
-        palavras = palavras + (palavra, )
-    return palavras
+        palavra_pontos.append((palavra, obtem_pontos(vocabulario, palavra)))
+    for i in range(comprimento-1,-1,-1):
+        palavra_pontos.sort(key = lambda x: c_cedilha(x[0][i]) if len(x[0]) > i else 0)
+    palavra_pontos.sort(key = lambda x: -x[1])
+        
+    return tuple(palavra_pontos)
 
 #teste
 def testa_palavra_padrao(vocabulario, palavra, padrao, letras):
@@ -257,16 +254,15 @@ def testa_palavra_padrao(vocabulario, palavra, padrao, letras):
     """
     letras_disponiveis = letras
     possibilidade = ''
-    if len(palavra) not in vocabulario or palavra[0] not in vocabulario[len(palavra)]:
+    if len(palavra) not in vocabulario or palavra[0] not in vocabulario[len(palavra)] or palavra not in vocabulario[len(palavra)][palavra[0]]:
         return False
    
     if len(padrao) != len(palavra):
         return False
     if '.' not in padrao: 
         return False
-    letras_disponiveis = letras
     for i in range(len(padrao)):
-        if padrao[i] == '.' and palavra[i] in letras_disponiveis: 
+        if padrao[i] == '.' and palavra[i] in letras_disponiveis:
            letras_disponiveis= letras_disponiveis.replace(palavra[i], '', 1)
            possibilidade += palavra[i]
         elif padrao[i] != '.' and padrao[i] == palavra[i]:
@@ -283,7 +279,12 @@ def ficheiro_para_vocabulario(nome_fich):
     Returns -> vocabulario
     """
     with open(nome_fich, 'r', encoding = 'utf-8') as f:
-        return cria_vocabulario(tuple([(palavra.strip()).upper() for palavra in f.readlines()]))
+        vocab = set()
+        for palavra in f.readlines():
+            palavra = palavra.strip().upper()
+            if 2<= len(palavra) <= 15 and all(letra in LETRAS.keys() for letra in palavra):
+               vocab.add(palavra)
+        return cria_vocabulario(tuple(vocab)) 
 
 
 def vocabulario_para_str(vocabulario):
@@ -310,14 +311,14 @@ def procura_palavra_padrao(vocabulario, padrao, letras, min_pontos):
     opcoes=[]
     if padrao[0] != '.' and len(padrao) in vocabulario and padrao[0] in vocabulario[len(padrao)]:
         for palavra in vocabulario[len(padrao)][padrao[0]]:
-            if testa_palavra_padrao(vocabulario, palavra[0], padrao, letras) and obtem_pontos(vocabulario, palavra[0]) >= min_pontos:
-                opcoes.append(palavra)
+            if testa_palavra_padrao(vocabulario, palavra, padrao, letras) and obtem_pontos(vocabulario, palavra) >= min_pontos:
+                opcoes.append((palavra, obtem_pontos(vocabulario, palavra)))
     elif padrao[0] == '.':
         for letra in letras:
             if len(padrao) in vocabulario and letra in vocabulario[len(padrao)]:
                 for palavra in vocabulario[len(padrao)][letra]:
-                    if testa_palavra_padrao(vocabulario, palavra[0], padrao, letras) and obtem_pontos(vocabulario, palavra[0]) >= min_pontos:
-                        opcoes.append(palavra)
+                    if testa_palavra_padrao(vocabulario, palavra, padrao, letras) and obtem_pontos(vocabulario, palavra) >= min_pontos:
+                        opcoes.append((palavra, obtem_pontos(vocabulario, palavra)))
     if len(opcoes) == 0:
         return ('',0)
     for i in range(len(padrao)-1,-1,-1):
@@ -353,13 +354,14 @@ def insere_letra(tabuleiro, casa, letra):
 #reconhecedor
 def eh_tabuleiro(arg):
     """Arg -> tabuleiro     Returns -> bool"""
-    if type(arg) == list:
-        for i in range(len(arg)):
-            if type(arg[i]) != list:
+    if type(arg) != list or len(arg) != ALTURA:
+        return False
+    for i in range(len(arg)):
+        if type(arg[i]) != list or len(arg[i]) != LARGURA:
+            return False
+        for j in range(len(arg[i])):
+            if type(obtem_letra(arg, cria_casa(i+1, j+1))) != str:
                 return False
-            for j in range(len(arg[i])):
-                if type(obtem_letra(arg, cria_casa(i+1, j+1))) != str:
-                    return False
     return True
 
 def eh_tabuleiro_vazio(arg):
@@ -572,6 +574,7 @@ def jogada_agente(tabuleiro, jogador, vocabulario, pilha):
             padroes = padroes[::10]
             inicios = inicios [::10]
             direcoes = direcoes[:: 10]
+    
     possibilidades = []
      
     for i in range(len(padroes)):
