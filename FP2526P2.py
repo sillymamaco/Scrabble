@@ -11,6 +11,8 @@ CENTRO = (8, 8)
 MAX_JOG = 4
 MAX_LETRAS_INIT = 7
 NIVEIS= {'FACIL', 'MEDIO', 'DIFICIL'}
+HORIZONTAL = 'H'
+VERTICAL = 'V'
 
 
 def c_cedilha(letra): 
@@ -33,9 +35,9 @@ def expande_conjunto(conjunto):
 def obtem_direcao(casa1, casa2):
     """Arg -> casa, casa        Returns -> str"""
     if obtem_lin(casa1) == obtem_lin(casa2):
-        return 'H'
+        return HORIZONTAL
     elif obtem_col(casa1) == obtem_col(casa2):  
-        return 'V'
+        return VERTICAL
     else:
         return 'I' #de inválido
     
@@ -93,10 +95,10 @@ def str_para_casa(string):
 #funcoes de alto nivel
 def incrementa_casa(casa, direcao, distancia):
     """Arg -> casa, direcao, distancia      Returns -> casa (atualizada)"""
-    if direcao == 'H' and 0 < (obtem_col(casa) + distancia) <= LARGURA:
-        return (obtem_lin(casa), obtem_col(casa)  + distancia)
-    elif direcao == 'V' and 0 < (obtem_lin(casa) + distancia) <= ALTURA:
-        return (obtem_lin(casa)  + distancia, obtem_col(casa))
+    if direcao == HORIZONTAL and 0 < (obtem_col(casa) + distancia) <= LARGURA:
+        return cria_casa(obtem_lin(casa), obtem_col(casa)  + distancia)
+    elif direcao == VERTICAL and 0 < (obtem_lin(casa) + distancia) <= ALTURA:
+        return cria_casa(obtem_lin(casa)  + distancia, obtem_col(casa))
     else:
         return casa
 
@@ -107,7 +109,7 @@ def incrementa_casa(casa, direcao, distancia):
 def cria_humano(nome):
     """Arg -> str
     Returns -> dict = {id: id, pontos: pontos, letras: letras, agente: bool}"""
-    if type(nome) != str or len(nome) == 0 or '@' in nome:
+    if type(nome) != str or len(nome) == 0:
         raise ValueError('cria_humano: argumento inválido')
     else:
         return {'id': nome, 'pontos': 0, 'letras': '', 'agente':False}
@@ -230,6 +232,8 @@ def obtem_pontos(vocabulario, palavra):
     """Arg -> vocabulario, str      Returns -> int"""
     if len(palavra) in vocabulario and palavra[0] in vocabulario[len(palavra)] and palavra in vocabulario[len(palavra)][palavra[0]]:
         return vocabulario[len(palavra)][palavra[0]][palavra]
+    else:
+        return 0
 
 def obtem_palavras(vocabulario, comprimento, letra):
     """Arg -> Vocabulario, int, letra       Returns -> ((palavra, pontos), (palavra, pontos),...)"""
@@ -312,16 +316,19 @@ def procura_palavra_padrao(vocabulario, padrao, letras, min_pontos):
     """
     
     opcoes=[]
-    if padrao[0] != '.' and len(padrao) in vocabulario and padrao[0] in vocabulario[len(padrao)]:
-        for palavra in vocabulario[len(padrao)][padrao[0]]:
-            if testa_palavra_padrao(vocabulario, palavra, padrao, letras) and obtem_pontos(vocabulario, palavra) >= min_pontos:
-                opcoes.append((palavra, obtem_pontos(vocabulario, palavra)))
+    if padrao[0] != '.':
+        palavras_pontos = obtem_palavras(vocabulario, len(padrao), padrao[0])
+        if len(palavras_pontos) != 0:
+            for palavra in palavras_pontos:
+                if testa_palavra_padrao(vocabulario, palavra[0], padrao, letras) and palavra[1] >= min_pontos:
+                    opcoes.append(palavra)
     elif padrao[0] == '.':
         for letra in letras:
-            if len(padrao) in vocabulario and letra in vocabulario[len(padrao)]:
-                for palavra in vocabulario[len(padrao)][letra]:
-                    if testa_palavra_padrao(vocabulario, palavra, padrao, letras) and obtem_pontos(vocabulario, palavra) >= min_pontos:
-                        opcoes.append((palavra, obtem_pontos(vocabulario, palavra)))
+            palavras_pontos = obtem_palavras(vocabulario, len(padrao), letra)
+            if len(palavras_pontos) != 0 :
+                for palavra in palavras_pontos:
+                    if testa_palavra_padrao(vocabulario, palavra[0], padrao, letras) and palavra[1] >= min_pontos:
+                        opcoes.append(palavra)
     if len(opcoes) == 0:
         return ('',0)
     for i in range(len(padrao)-1,-1,-1):
@@ -413,14 +420,14 @@ def obtem_padrao(tabuleiro, inicio, fim):
     """Arg -> tabuleiro, casa, casas        Returns -> padrao(str)"""
     padrao=''
     direcao = obtem_direcao(inicio, fim)
-    if direcao == 'V':
+    if direcao == VERTICAL:
         while obtem_lin(inicio) <= obtem_lin(fim):        
             padrao += obtem_letra(tabuleiro, inicio)
             novo_inicio = incrementa_casa(inicio, direcao, 1)
             if novo_inicio == inicio:
                 break
             inicio = novo_inicio
-    elif direcao == 'H':
+    elif direcao == HORIZONTAL:
         while obtem_col(inicio) <= obtem_col(fim):
             padrao += obtem_letra(tabuleiro, inicio)
             novo_inicio = incrementa_casa(inicio, direcao, 1)
@@ -461,12 +468,12 @@ def gera_todos_padroes(tabuleiro, length):
         subpadroes_horizontal = obtem_subpadroes(tabuleiro, cria_casa(i, 1), cria_casa(i, LARGURA), length)
         padroes_tuplo += subpadroes_horizontal[0]
         inicio_tuplo += subpadroes_horizontal[1]
-        direcoes_tuplo += ('H', ) * len(subpadroes_horizontal[0])
+        direcoes_tuplo += (HORIZONTAL, ) * len(subpadroes_horizontal[0])
     for j in range(1, LARGURA+1):
         subpadroes_vertical = obtem_subpadroes(tabuleiro, cria_casa(1, j), cria_casa(ALTURA, j), length)
         padroes_tuplo += subpadroes_vertical[0]
         inicio_tuplo += subpadroes_vertical[1]
-        direcoes_tuplo += ('V', ) * len(subpadroes_vertical[0])
+        direcoes_tuplo += (VERTICAL, ) * len(subpadroes_vertical[0])
 
     return padroes_tuplo, inicio_tuplo, direcoes_tuplo
 
@@ -521,10 +528,15 @@ def jogada_humano(tabuleiro, jogador, vocabulario, pilha):
             acao = acao[1:]
             if len(acao) < 4: #Tira o J e vê se forneceu as duas coordenadas, a direção e um conjunto de letras
                 continue
-            inicio, direcao, palavra = cria_casa(int(acao[0]), int(acao[1])), acao[2], acao[3]
-            if direcao == 'H':
+            if not eh_casa(cria_casa(int(acao[0]), int(acao[1]))):
+                continue
+            try:
+                inicio, direcao, palavra = cria_casa(int(acao[0]), int(acao[1])), acao[2], acao[3]
+            except ValueError('cria_casa: argumentos inválidos'):
+                continue
+            if direcao == HORIZONTAL:
                 fim = cria_casa(obtem_lin(inicio), obtem_col(inicio) + len(palavra)-1)
-            elif direcao == 'V':
+            elif direcao == VERTICAL:
                 fim = cria_casa(obtem_lin(inicio) + len(palavra) -1, obtem_col(inicio))
             
             padrao = obtem_padrao(tabuleiro, inicio, fim)
@@ -545,7 +557,7 @@ def jogada_humano(tabuleiro, jogador, vocabulario, pilha):
                    
             
             elif (not eh_tabuleiro_vazio(tabuleiro)) and padrao.count('.') != len(padrao) and\
-            testa_palavra_padrao(vocabulario, palavra, padrao, jogador_letras(jogador)):
+            testa_palavra_padrao(vocabulario, palavra, padrao, jogador_letras(jogador)) and (obtem_letra(tabuleiro, incrementa_casa(inicio, direcao, -1)) == '.') and (obtem_letra(tabuleiro, incrementa_casa(fim, direcao, 1)) == '.'):
                 insere_palavra(tabuleiro, inicio, direcao, palavra)
                 soma_pontos(jogador, obtem_pontos(vocabulario, palavra))
                 adicionar = 0
@@ -566,18 +578,13 @@ def jogada_agente(tabuleiro, jogador, vocabulario, pilha):
     padroes, inicios, direcoes = gera_todos_padroes(tabuleiro, len(jogador_letras(jogador)))
     if len(padroes) != 0:
         if jogador_identidade(jogador) == 'FACIL':
-            padroes = padroes[::100]
-            inicios = inicios [::100]
-            direcoes = direcoes[:: 100]
+            n = 100
         elif jogador_identidade(jogador) == 'MEDIO':
-            padroes = padroes[::50]
-            inicios = inicios [::50]
-            direcoes = direcoes[:: 50]
+            n = 50
         elif jogador_identidade(jogador) == 'DIFICIL':
-            padroes = padroes[::10]
-            inicios = inicios [::10]
-            direcoes = direcoes[:: 10]
-    
+            n = 10
+        padroes, inicios, direcoes = padroes[::n], inicios[::n], direcoes[::n]
+
     possibilidades = []
      
     for i in range(len(padroes)):
@@ -595,9 +602,9 @@ def jogada_agente(tabuleiro, jogador, vocabulario, pilha):
         palavra, pontos = melhor[0]  
         inicio = melhor[1]  
         direcao = melhor[2]
-        if direcao == 'H':
+        if direcao == HORIZONTAL:
             padrao = obtem_padrao(tabuleiro, inicio, cria_casa(obtem_lin(inicio), obtem_col(inicio) + len(palavra)-1))
-        if direcao == 'V':
+        if direcao == VERTICAL:
             padrao = obtem_padrao(tabuleiro, inicio, cria_casa(obtem_lin(inicio) + len(palavra) -1, obtem_col(inicio)))
         insere_palavra(tabuleiro,  inicio, direcao, palavra)
         tirar = 0
@@ -634,12 +641,12 @@ def scrabble2(jogadores, nome_fich, seed):
     passes_consecutivos = 0 
 
     for jogador in jogadores:
-        if type(jogador) != str:
-            raise ValueError('scrabble2: argumentos inválidos')
-        if jogador[0] == '@' and jogador[1:] in NIVEIS:
+        if type(jogador) == str and jogador[0] == '@' and jogador[1:] in NIVEIS:
             players.append(cria_agente(jogador[1:]))
         elif type(jogador) == str:
             players.append(cria_humano(jogador))
+        else:
+            raise ValueError('scrabble2:  argumentos inválidos')
     for player in players:
         distribui_letras(player, pilha,  MAX_LETRAS_INIT)
         
