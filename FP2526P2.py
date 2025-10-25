@@ -532,13 +532,19 @@ def jogada_humano(tabuleiro, jogador, vocabulario, pilha):
                 continue
             try:
                 inicio, direcao, palavra = cria_casa(int(acao[0]), int(acao[1])), acao[2], acao[3]
-            except ValueError('cria_casa: argumentos inválidos'):
+            except ValueError:
                 continue
             if direcao == HORIZONTAL:
-                fim = cria_casa(obtem_lin(inicio), obtem_col(inicio) + len(palavra)-1)
+                try:
+                     fim = cria_casa(obtem_lin(inicio), obtem_col(inicio) + len(palavra)-1)
+                except ValueError:
+                    continue
+
             elif direcao == VERTICAL:
-                fim = cria_casa(obtem_lin(inicio) + len(palavra) -1, obtem_col(inicio))
-            
+                try:
+                    fim = cria_casa(obtem_lin(inicio) + len(palavra) -1, obtem_col(inicio))
+                except ValueError:
+                    continue
             padrao = obtem_padrao(tabuleiro, inicio, fim)
             
             if eh_tabuleiro_vazio(tabuleiro) and testa_palavra_padrao(vocabulario, palavra, padrao, jogador_letras(jogador)):
@@ -592,10 +598,10 @@ def jogada_agente(tabuleiro, jogador, vocabulario, pilha):
             padrao = padroes[i]
             inicio = inicios[i] 
             direcao = direcoes[i]
-            if len(padrao) in vocabulario:
-                resultado = procura_palavra_padrao(vocabulario, padrao, jogador_letras(jogador), 0)
-                if resultado[0] != '':  
-                    possibilidades.append((resultado, inicio, direcao))
+            
+            resultado = procura_palavra_padrao(vocabulario, padrao, jogador_letras(jogador), 0)
+            if resultado[0] != '':  
+                possibilidades.append((resultado, inicio, direcao))
     possibilidades.sort(key = lambda x : x[0][1], reverse = True)
     if possibilidades != []:
         melhor = possibilidades[0] 
@@ -631,7 +637,7 @@ def scrabble2(jogadores, nome_fich, seed):
     """Arg -> tuplo com 2-4 jogadores, estando os agentes indicados com @, str, int
     Returns -> tuplo (scores)
     """
-    if type(jogadores) != tuple or type(seed) != int or not(1 < len(jogadores) <= MAX_JOG) or type(nome_fich) != str:
+    if type(jogadores) != tuple or type(seed) != int  or seed < 0 or not(1 < len(jogadores) <= MAX_JOG) or type(nome_fich) != str:
         raise ValueError('scrabble2: argumentos inválidos')
     pilha =baralha_saco(seed)
     players = []
@@ -639,18 +645,21 @@ def scrabble2(jogadores, nome_fich, seed):
     continuar = True
     jogador_atual = 0
     passes_consecutivos = 0 
+    vocabulario = ficheiro_para_vocabulario(nome_fich)
 
     for jogador in jogadores:
         if type(jogador) == str and jogador[0] == '@' and jogador[1:] in NIVEIS:
             players.append(cria_agente(jogador[1:]))
+        elif type(jogador) == str and jogador[0] == '@' and jogador[1:] not in NIVEIS:
+            raise ValueError('scrabble2: argumentos inválidos')
         elif type(jogador) == str:
             players.append(cria_humano(jogador))
         else:
-            raise ValueError('scrabble2:  argumentos inválidos')
+            raise ValueError('scrabble2: argumentos inválidos')
+    if len(pilha) < (MAX_LETRAS_INIT * len(jogadores)):
+        raise ValueError("scrabble2: argumentos inválidos")
     for player in players:
         distribui_letras(player, pilha,  MAX_LETRAS_INIT)
-        
-    vocabulario = ficheiro_para_vocabulario(nome_fich)
 
 
     print('Bem-vindo ao SCRABBLE2.')
