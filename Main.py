@@ -1,6 +1,6 @@
 import sys
 
-# --- HELPER FUNCTIONS (MUST BE DEFINED BEFORE LANGUAGES DICT) ---
+#--- HELPER FUNCTIONS ---
 
 def get_cedilla_key(char):
     """Specific sorting for Portuguese to put Ç after C"""
@@ -12,7 +12,7 @@ def get_standard_key(char):
     """Standard sorting for English/French"""
     return ord(char)
 
-# --- GLOBAL SETTINGS ---
+#--- GLOBAL SETTINGS ---
 
 LANGUAGES = {
     'PT': {
@@ -88,12 +88,12 @@ LANGUAGES = {
         'VOCABULARY_FILE': 'fr.txt'
     }
 }
-# --- GLOBAL SETTINGS (Initialized via select_language) ---
-CURRENT_LANG = 'PT' # Default
+#--- GLOBAL SETTINGS (Initialized via select_language) ---
+CURRENT_LANG = 'PT' #Default
 LETTER_VALUES = {}
 BAG_DISTRIBUTION = {}
 TEXTS = {}
-SORT_KEY = None # Function pointer
+SORT_KEY = None #Function pointer
 
 def select_language(lang_code):
     global CURRENT_LANG, LETTER_VALUES, BAG_DISTRIBUTION, TEXTS, SORT_KEY
@@ -107,13 +107,13 @@ def select_language(lang_code):
     TEXTS = data['TEXTS']
     SORT_KEY = data['SORT_FUNC']
 
-# --- CONSTANTS ---
+#--- CONSTANTS ---
 HEIGHT = 15
 WIDTH = 15
 CENTER = (8, 8)
 MAX_PLAYERS = 4
 MAX_LETTERS_INIT = 7
-LEVELS = {'FACIL', 'MEDIO', 'DIFICIL'} # Keep internal IDs consistent, or map them if needed
+LEVELS = {'FACIL', 'MEDIO', 'DIFICIL'} 
 HORIZONTAL = 'H'
 VERTICAL = 'V'
 
@@ -134,14 +134,14 @@ def get_direction(sq1, sq2):
     elif get_col(sq1) == get_col(sq2):  
         return VERTICAL
     else:
-        return 'I' # I for Invalid
+        return 'I' #I for Invalid
 
 #----------------------------------------------------------------------------
 """ 
 ADT Square (Coordinate)
 Representation: (row, col) - tuple of two integers
 """
-# Constructor
+#Constructor
 def create_square(row, col):
     """Arg -> int, int   Returns -> square"""
     if type(row) != int or type(col) != int or \
@@ -150,7 +150,7 @@ def create_square(row, col):
     else:
         return (row, col)
 
-# Selectors
+#Selectors
 def get_row(square):
     """Arg -> Square   Returns -> int"""
     if is_square(square):
@@ -161,7 +161,7 @@ def get_col(square):
     if is_square(square):
         return square[1]
 
-# Recognizer
+#Recognizer
 def is_square(c):
     """Arg -> Square  Returns -> bool""" 
     if type(c)!= tuple or len(c) !=2 or \
@@ -171,7 +171,7 @@ def is_square(c):
     else:
         return True
 
-# Test
+#Test
 def squares_equal(sq1, sq2):
     """Arg -> square, square     Returns -> bool"""
     if is_square(sq1) and is_square(sq2) and \
@@ -181,7 +181,7 @@ def squares_equal(sq1, sq2):
     else: 
         return False
 
-# Transformers
+#Transformers
 def square_to_str(square):
     """Arg -> square      Returns -> str"""
     if is_square(square):
@@ -194,7 +194,7 @@ def str_to_square(string):
 
     return create_square(int(string[0]), int(string[1]))
 
-# High Level Functions
+#High Level Functions
 def increment_square(square, direction, distance):
     """
     Increases one coordinate of a given square.
@@ -216,7 +216,7 @@ ADT Player
 Representation: dictionary {'id': str, 'points': int, 'letters': str, 'agent': bool}
 """
 
-# Constructors
+#Constructors
 def create_human(name):
     """Arg -> str
     Returns -> dict"""
@@ -233,7 +233,7 @@ def create_agent(level):
     else:
         return {'id': f'{level}', 'points': 0, 'letters': '', 'agent': True}
 
-# Selectors
+#Selectors
 def player_identity(player):
     """Arg -> player    Returns -> str"""
     return player['id']
@@ -244,10 +244,10 @@ def player_points(player):
 
 def player_letters(player):
     """Arg -> player    Returns -> sorted list"""
-    # Uses the dynamic SORT_KEY from the language file
+    #Uses the dynamic SORT_KEY from the language file
     return ''.join(sorted(player['letters'], key = SORT_KEY))
 
-# Modifiers
+#Modifiers
 def receive_letter(player, letter):
     """Arg -> player, str    Returns -> player"""
     player['letters'] = player['letters'] + letter
@@ -263,7 +263,7 @@ def add_points(player, points):
     player['points'] = player['points'] + points
     return player
 
-# Recognizers
+#Recognizers
 def is_player(arg):
     """Arg -> universal     Returns -> bool"""
     return (type(arg) == dict and set(arg.keys()) == {'id', 'points', 'letters', 'agent'})
@@ -276,7 +276,7 @@ def is_agent(player):
     """Arg -> player    Returns -> bool"""
     return is_player(player) and player['agent']
 
-# Test
+#Test
 def players_equal(p1, p2):
     """Arg -> player, player   Returns -> bool"""
     return ((is_human(p1) and is_human(p2)) or \
@@ -285,7 +285,7 @@ def players_equal(p1, p2):
            player_points(p1) == player_points(p2) and \
             player_letters(p1) == player_letters(p2) 
 
-# Transformer
+#Transformer
 def player_to_str(player):
     """Arg -> player    Returns -> str"""
     letters_display = player_letters(player)
@@ -298,7 +298,7 @@ def player_to_str(player):
     if is_human(player):
         return (f'{player_identity(player)} ({str(player_points(player)):>3}):{letters_str}') 
 
-# High Level Functions
+#High Level Functions
 def distribute_letters(player, letters_stack, num): 
     """
     Gives num letters from a stack to a player.
@@ -317,7 +317,7 @@ ADT Vocabulary
 Representation: dictionary {length: {start_letter: {word: points}}}
 """
 
-# Constructor
+#Constructor
 def create_vocabulary(v):
     """
     Organizes words from a tuple into a dictionary.
@@ -345,7 +345,7 @@ def create_vocabulary(v):
         vocabulary[length][initial][word] = points            
     return vocabulary
 
-# Selectors
+#Selectors
 def get_points(vocabulary, word):
     """Arg -> vocabulary, str      Returns -> int"""
     if len(word) in vocabulary and \
@@ -366,13 +366,13 @@ def get_words(vocabulary, length, letter):
     for word in vocabulary[length][letter]:
         word_points.append((word, get_points(vocabulary, word)))
 
-    for i in range(length-1,-1,-1): # sort alphabetically, last to first letter
+    for i in range(length-1,-1,-1): #sort alphabetically, last to first letter
         word_points.sort(key = lambda x: SORT_KEY(x[0][i]) if len(x[0]) > i else 0) 
-    word_points.sort(key = lambda x: -x[1]) # then by points
+    word_points.sort(key = lambda x: -x[1]) #then by points
         
     return tuple(word_points)
 
-# Test
+#Test
 def test_word_pattern(vocabulary, word, pattern, letters):
     """
     Checks if it is possible to form a word that fits the pattern with available letters.
@@ -388,7 +388,7 @@ def test_word_pattern(vocabulary, word, pattern, letters):
 
     if len(pattern) != len(word):
         return False
-    if '.' not in pattern: # pattern already filled
+    if '.' not in pattern: #pattern already filled
         return False
     
     for i in range(len(pattern)):
@@ -402,7 +402,7 @@ def test_word_pattern(vocabulary, word, pattern, letters):
     
     return possibility == word  
 
-# Transformers
+#Transformers
 def file_to_vocabulary(filename_or_list):
     """
     Decodes a file or uses the list from config.
@@ -433,7 +433,7 @@ def vocabulary_to_str(vocabulary):
 
     return'\n'.join(vocabulary_str)
     
-# High Level Functions
+#High Level Functions
 def search_pattern_word(vocabulary, pattern, letters, min_points):
     """
     Searches for words filling pattern, sorting by points.
@@ -474,7 +474,7 @@ ADT Board
 Representation: list of lists of strings (15x15 matrix)
 """
 
-# Constructor
+#Constructor
 def create_board():
     """Returns -> board"""
     board = []
@@ -483,19 +483,19 @@ def create_board():
         board.append(row)
     return board
 
-# Selector
+#Selector
 def get_letter(board, square):
     """Arg -> board, square       Returns -> str"""
     letter = board[get_row(square) - 1][get_col(square)- 1] 
     return letter
 
-# Modifier
+#Modifier
 def insert_letter(board, square, letter):
     """Arg -> board, square, str      Returns -> board (updated)"""
     board[get_row(square) - 1][get_col(square) - 1] = letter
     return board
 
-# Recognizer
+#Recognizer
 def is_board(arg):
     """Arg -> board     Returns -> bool"""
     if type(arg) != list or len(arg) != HEIGHT:
@@ -523,7 +523,7 @@ def is_board_empty(arg):
     
     return True
     
-# Test
+#Test
 def boards_equal(t1, t2):
     """Arg -> board, board     Returns -> bool"""
     if is_board(t1) and is_board(t2):
@@ -535,7 +535,7 @@ def boards_equal(t1, t2):
         return False
     return True
 
-# Transformer
+#Transformer
 def board_to_str(board):
     """Arg -> board     Returns -> str"""
     board_str = (f'{TEXTS["board_header_1"]:>34}\n'
@@ -554,7 +554,7 @@ def board_to_str(board):
     
     return board_str
 
-# High Level Functions
+#High Level Functions
 def get_pattern(board, start, end):
     """
     Gets sequence of chars from a portion of the board.
@@ -809,7 +809,7 @@ def agent_play(board, player, vocabulary, stack):
         distribute_letters(player, stack, remove_count)
         add_points(player, points)
         
-        # Display formatted output
+        #Display formatted output
         print(TEXTS['play_format'].format(player_identity(player), get_row(start), get_col(start), direction, word))
         return True
 
@@ -833,12 +833,12 @@ def scrabble_game(players_tuple, seed, language='PT'):
     """
     select_language(language) 
 
-    # VALIDATION
+    #VALIDATION
     if type(players_tuple) != tuple or type(seed) != int  \
     or seed < 0 or not(1 < len(players_tuple) <= MAX_PLAYERS):
         raise ValueError(f"scrabble_game: {TEXTS['invalid_args']}")
     
-    # LOAD VOCABULARY FROM CONFIG FILE
+    #LOAD VOCABULARY FROM CONFIG FILE
     filename = LANGUAGES[language]['VOCABULARY_FILE']
     try:
         vocabulary = file_to_vocabulary(filename)
@@ -847,7 +847,7 @@ def scrabble_game(players_tuple, seed, language='PT'):
         print("Please make sure pt.txt, en.txt, and fr.txt are in the same folder.")
         return
 
-    # GAME SETUP
+    #GAME SETUP
     stack = shuffle_bag(seed)
     players = []
     board = create_board()
@@ -873,7 +873,7 @@ def scrabble_game(players_tuple, seed, language='PT'):
 
     print(TEXTS['welcome'])
     
-    # GAME LOOP
+    #GAME LOOP
     while continue_game: 
         
         print(board_to_str(board))
@@ -902,8 +902,8 @@ def scrabble_game(players_tuple, seed, language='PT'):
     return scores
 
 
-    # Run English game (uses en.txt)
+    #Run English game (uses en.txt)
 scrabble_game(('Irina', '@FACIL'), 42, language='EN')
 
-# Run Portuguese game (uses pt.txt)
+#Run Portuguese game (uses pt.txt)
 scrabble_game(('Irina', '@FACIL'), 42, language='PT')
