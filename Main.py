@@ -900,10 +900,3 @@ def scrabble_game(players_tuple, seed, language='PT'):
          
     scores = tuple(player_points(player) for player in players)
     return scores
-
-
-    #Run English game (uses en.txt)
-scrabble_game(('Irina', '@FACIL'), 42, language='EN')
-
-#Run Portuguese game (uses pt.txt)
-scrabble_game(('Irina', '@FACIL'), 42, language='PT')
